@@ -74,8 +74,10 @@ stdout
 ```{r}
  oc0<- stringr::str_count(stdout, "0") #incorrect splits
  oc1<- stringr::str_count(stdout, "1") #correct splits
- oc1/(oc0+oc1) # we want this number to be high!
+ oc1/(oc0+oc1) # we want this number to be close to 1!
 ```
+A value close to 0.5 means, that relevant and irrelevant 
+covariates are being split equally often.
 
 ### Prediction
 
