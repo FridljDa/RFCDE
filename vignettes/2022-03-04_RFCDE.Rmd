@@ -1,0 +1,80 @@
+---
+title: "RFCDE"
+author: "Taylor Pospisil"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{RFCDE}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Random forests is a common non-parametric regression technique which
+performs well for mixed-type data and irrelevant covariates, while
+being robust to monotonic variable transformations. RFCDE fits random
+forest models optimized for nonparametric conditional density
+estimation.
+
+## Example
+
+```{r}
+#library(RFCDE)
+devtools::load_all() 
+set.seed(42)
+
+generate_data <- function(n) {
+  x_relevant <- matrix(runif(n * 1), n, 1)
+  x_irrelevant <- matrix(runif(n * 1), n, 1)
+  z <- rnorm(n, rowSums(x_relevant), 1)
+  return(list(x = cbind(x_relevant, x_irrelevant), z = z))
+}
+
+n_train <- 5000
+n_test <- 4
+
+train_data <- generate_data(n_train)
+x_train <- train_data$x
+z_train <- train_data$z
+```
+
+### Training
+
+Trees are recursively partitioned to minimize the CDE loss
+
+$$ \int \int (\hat{f}(x \mid z) - f(x \mid z))^{2} dz dP(x) $$
+
+This is efficiently calculated using an orthogonal series
+representation of the conditional densities. The resolution of this
+representation is controlled by `n_basis`.
+
+```{r}
+n_trees <- 10
+mtry <- 4
+node_size <- 5
+n_basis <- 20
+```
+
+```{r}
+stdout <- vector('character')
+con    <- textConnection('stdout', 'wr', local = TRUE)
+sink(con)
+forest <- RFCDE(x_train, z_train, n_trees = n_trees, mtry = mtry,
+                node_size = node_size, n_basis = n_basis, basis_system = "cosine",
+                min_loss_delta = 0)
+sink()
+close(con)
+stdout
+```
+
+```{r}
+ oc0<- stringr::str_count(stdout, "0")
+ oc1<- stringr::str_count(stdout, "1")
+ oc1/(oc0+oc1)
+```
