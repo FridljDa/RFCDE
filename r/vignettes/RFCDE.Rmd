@@ -25,7 +25,7 @@ estimation.
 ## Example
 
 ```{r}
-library(RFCDE)
+devtools::load_all()
 set.seed(42)
 
 generate_data <- function(n) {
@@ -52,15 +52,29 @@ $$ \int \int (\hat{f}(x \mid z) - f(x \mid z))^{2} dz dP(x) $$
 This is efficiently calculated using an orthogonal series
 representation of the conditional densities. The resolution of this
 representation is controlled by `n_basis`.
+```{r}
+n_trees <- 10
+mtry <- 4
+node_size <- 5
+n_basis <- 15
+```
 
 ```{r}
-n_trees <- 1000
-mtry <- 4
-node_size <- 20
-n_basis <- 15
-
+stdout <- vector('character')
+con    <- textConnection('stdout', 'wr', local = TRUE)
+sink(con)
 forest <- RFCDE(x_train, z_train, n_trees = n_trees, mtry = mtry,
-                node_size = node_size, n_basis = n_basis)
+                node_size = node_size, n_basis = n_basis, basis_system = "cosine",
+                min_loss_delta = 0)
+sink()
+close(con)
+stdout
+```
+
+```{r}
+ oc0<- stringr::str_count(stdout, "0") #incorrect splits
+ oc1<- stringr::str_count(stdout, "1") #correct splits
+ oc1/(oc0+oc1) # we want this number to be high!
 ```
 
 ### Prediction
