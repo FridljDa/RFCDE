@@ -6,6 +6,9 @@
 #include "Node.h"
 #include "helpers.h"
 
+#include <Rcpp.h>
+using namespace Rcpp;
+
 typedef std::vector<int>::iterator ivecit;
 
 Node::Node() {
@@ -64,6 +67,13 @@ void Node::train(double* x_train, double* z_basis,
   }
   loss_delta = best_split.loss_delta;
 
+  //the first 10 variables of the covariate are relevant, the last 10 variables
+  // ideally, the last variables should never be split
+  bool coorect_split= best_split.var<10;
+  // coorect_split = 1 => splitting relevant variables => good
+  // correct_split = 0 => splitting irrelevant variables/wasting budget => bad
+  Rcout <<coorect_split;
+    
   this -> split_var = best_split.var;
   if (split_var != last_var) {
     sortby(valid_idx_begin, valid_idx_end, &x_train[split_var * n_train]);
